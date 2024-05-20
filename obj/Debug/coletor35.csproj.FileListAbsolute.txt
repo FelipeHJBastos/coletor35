@@ -12,3 +12,35 @@ C:\Users\felipe.hariel\Desktop\coletor 35\coletor35\obj\Debug\coletor35.csproj.C
 C:\Users\felipe.hariel\Desktop\coletor 35\coletor35\obj\Debug\coletor35.csproj.CopyComplete
 C:\Users\felipe.hariel\Desktop\coletor 35\coletor35\obj\Debug\coletor35.exe
 C:\Users\felipe.hariel\Desktop\coletor 35\coletor35\obj\Debug\coletor35.pdb
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\coletor35.exe
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\coletor35.pdb
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Inttelix.Device.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Inttelix.Device.FaceAccess.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Newtonsoft.Json.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Riss.Devices.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\WatchComm.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Inttelix.Crypto.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Interop.zkemkeeper.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Interop.zkemkeeperbz900.dll
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\Newtonsoft.Json.xml
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.csproj.AssemblyReference.cache
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.csproj.CoreCompileInputs.cache
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.csproj.CopyComplete
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.exe
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.pdb
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.exe
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.pdb
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\Inttelix.Crypto.dll
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\Interop.zkemkeeper.dll
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\Interop.zkemkeeperbz900.dll
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.csproj.AssemblyReference.cache
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.csproj.CoreCompileInputs.cache
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.csproj.Up2Date
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.exe
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.pdb
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.exe.manifest
+C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.application
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.exe.manifest
+C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.application
