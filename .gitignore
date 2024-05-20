@@ -1,0 +1,66 @@
+# Diretórios do Visual Studio
+.vscode/
+.vs/
+
+# Diretórios de Build
+bin/
+obj/
+
+# Diretórios de publicação
+publish/
+out/
+
+# Dependências do NuGet
+*.nupkg
+*.snupkg
+packages/
+# Se você estiver armazenando pacotes, remova a linha acima e descomente a linha abaixo
+#!packages/packageName/
+
+# Arquivos de log, compilação e banco de dados local
+*.log
+*.sql
+*.sqlite
+*.pdb
+*.mdb
+*.accdb
+
+# Arquivos gerados pela IDE
+*.user
+*.suo
+*.sln.docstates
+
+# Configurações específicas de IDE
+.idea/
+*.code-workspace
+*.sln.docstates
+
+# Configurações de build
+project.lock.json
+project.fragment.lock.json
+artifacts/
+Generated\ Files/
+
+# Resultados de testes
+TestResults/
+*.trx
+*.cvr
+*.coverage
+*.coveragexml
+_UpgradeReport_Files/
+
+# Diretórios do Rider
+.idea/
+.idea/*
+.idea_modules/
+.idea_shells/
+
+# Diretórios do Mono Auto Generated
+.mono/
+mono_crash.*
+
+# Arquivos gerados pelo pacote NuGet
+*.nupkg
+*.snupkg
+
+# Arquivos temporários de
