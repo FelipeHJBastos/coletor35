@@ -252,6 +252,7 @@ internal class Program
         afdCabecalho.Append(AppConfig.DataUltimoRegistro); //Data do ultimo registro do arquivo
         afdCabecalho.Append(DateTime.Now.ToString("ddMMyyyyHH")); //Data e hora da geração do arquivo
         afdCabecalho.Append("03");// versão de layout do afd. padrão 003
+        afdCabecalho.Append('\n');
 
         using (StreamWriter writer = new StreamWriter(AppConfig.FilePath))
         {
@@ -273,14 +274,11 @@ internal class Program
             StringBuilder afdBatidas = new StringBuilder();
             if (Cpfs.ContainsKey(batida.Cpf))
             {
-                if (indexBatida != 0)
-                {
-                    afdBatidas.Append('\n');
-                }
                 afdBatidas.Append(batida.NSR);//NSR da batida
                 afdBatidas.Append('3');//padrão de layout
                 afdBatidas.Append(batida.DateTimeMarkingPoint.ToString("ddMMyyyyHHmm"));//Data e hora da marcacao
                 afdBatidas.Append(Cpfs[batida.Cpf].PadLeft(12, '0')); //retorna pis pelo dicionario retornado do gespam
+                afdBatidas.Append('\n');
                 afd.Append(afdBatidas);
                 indexBatida++;
             }
