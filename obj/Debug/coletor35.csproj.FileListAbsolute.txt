@@ -44,3 +44,7 @@ C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.exe.manifest
 C:\Users\Felipe\Desktop\coletor35\bin\Debug\coletor35.application
 C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.exe.manifest
 C:\Users\Felipe\Desktop\coletor35\obj\Debug\coletor35.application
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\coletor35.exe.manifest
+C:\Users\felipe.hariel\Desktop\coletor35\bin\Debug\coletor35.application
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.exe.manifest
+C:\Users\felipe.hariel\Desktop\coletor35\obj\Debug\coletor35.application

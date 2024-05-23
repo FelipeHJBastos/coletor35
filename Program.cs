@@ -19,7 +19,7 @@ using System.Diagnostics;
 internal class Program
 {
     //Controle de console
-    private static void Main(string[] args)
+    private static void Main()
     {
         try
         {
@@ -236,7 +236,6 @@ internal class Program
 
     public static void Afd(List<Marcacao> batidas, Dictionary<string, string> Cpfs)
     {
-        var indexBatida = 0;
         string[] lines = File.ReadAllLines(AppConfig.FilePath);
         StringBuilder afd = new StringBuilder();
         StringBuilder afdCabecalho = new StringBuilder();
@@ -247,15 +246,23 @@ internal class Program
         afdCabecalho.Append(AppConfig.Cnpj);//Cnpj da empresa
         afdCabecalho.Append("000000000000");//CNO ou CAEPF se existir
         afdCabecalho.Append(AppConfig.RazaoSocial.PadRight(150));//Razão Social- 150 caracteres por padrão
-        afdCabecalho.Append(AppConfig.SerialNumber);//Razão Social- 150 caracteres por padrão
+        afdCabecalho.Append(AppConfig.SerialNumber);//Numero Serial do relogio ponto
         afdCabecalho.Append(AppConfig.DataPrimeiroRegistro); //Data do primeiro registro do arquivo
         afdCabecalho.Append(AppConfig.DataUltimoRegistro); //Data do ultimo registro do arquivo
         afdCabecalho.Append(DateTime.Now.ToString("ddMMyyyyHH")); //Data e hora da geração do arquivo
         afdCabecalho.Append("03");// versão de layout do afd. padrão 003
-        afdCabecalho.Append('\n');
+        if (lines.Length == 0)
+        {
+            afdCabecalho.Append('\n');
+        }
 
         using (StreamWriter writer = new StreamWriter(AppConfig.FilePath))
         {
+            if (lines.Length == 0)
+            {
+                writer.WriteLine(afdCabecalho);
+            }
+
             for (int i = 0; i < lines.Length; i++)
             {
                 if (i == 0)
@@ -269,18 +276,20 @@ internal class Program
             }
         }
 
-        foreach (var batida in batidas)
+        for (var i = 0; i < batidas.Count; ++i)
         {
             StringBuilder afdBatidas = new StringBuilder();
-            if (Cpfs.ContainsKey(batida.Cpf))
+            if (Cpfs.ContainsKey(batidas[i].Cpf))
             {
-                afdBatidas.Append(batida.NSR);//NSR da batida
+                afdBatidas.Append(batidas[i].NSR);//NSR da batida
                 afdBatidas.Append('3');//padrão de layout
-                afdBatidas.Append(batida.DateTimeMarkingPoint.ToString("ddMMyyyyHHmm"));//Data e hora da marcacao
-                afdBatidas.Append(Cpfs[batida.Cpf].PadLeft(12, '0')); //retorna pis pelo dicionario retornado do gespam
-                afdBatidas.Append('\n');
+                afdBatidas.Append(batidas[i].DateTimeMarkingPoint.ToString("ddMMyyyyHHmm"));//Data e hora da marcacao
+                afdBatidas.Append(Cpfs[batidas[i].Cpf].PadLeft(12, '0')); //retorna pis pelo dicionario retornado do gespam
+                if (i != batidas.Count - 1)
+                {
+                    afdBatidas.Append('\n');
+                }
                 afd.Append(afdBatidas);
-                indexBatida++;
             }
         }
 
