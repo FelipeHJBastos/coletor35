@@ -32,6 +32,7 @@ namespace coletor35
         public static string SerialNumber { get; private set; } //URL do gespam da prefeitura
         public static string DataPrimeiroRegistro { get; private set; } //URL do gespam da prefeitura
         public static string DataUltimoRegistro { get; private set; } //URL do gespam da prefeitura
+        public static string ConnectionString { get; private set; } //URL do gespam da prefeitura
 
         public AppConfig()
         {
@@ -59,6 +60,7 @@ namespace coletor35
                 NSR = config["nsr"];
                 FilePath = config["filePath"];
                 LogIdentifier = Int32.Parse(config["logIdentifier"]);
+                ConnectionString = config["connectionString"];
                 IdMaquina = Int32.Parse(config["idMaquina"]);
                 GespamUrl = config["gespamUrl"];
                 Cnpj = config["cnpj"];
@@ -170,6 +172,9 @@ namespace coletor35
             {
                 config["serialNumber"] = "99999999999999999";
             }
+            config["dataPrimeiroRegistro"] = null;
+            config["dataUltimoRegistro"] = null;
+            config["connectionString"] = "DSN=ODBCDATABASE;Uid=USER;Pwd=PASSWORD;";
 
             string jsonConfig = JsonConvert.SerializeObject(config, Formatting.Indented);
             File.WriteAllText("config.json", jsonConfig);

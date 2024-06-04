@@ -13,30 +13,50 @@ using System.Net;
 using System.Text;
 using System.Linq;
 using System.Diagnostics;
+using System.Data.Odbc;
+using System.Timers;
+using System.ServiceProcess;
 
 
 
 internal class Program
 {
-    //Controle de console
+
     private static void Main()
     {
         try
         {
             AppConfig.LoadConfig(); //Carrega variáveis de configuração.
 
+            //SendEmployees.GetEmployees();
+
             //instancia watchcomm para conexão com relogio.
-            var watchComm = InstanciaWatchComm();
-            watchComm.OpenConnection();
+            //var watchComm = InstanciaWatchComm();
+            //watchComm.OpenConnection();
 
-            var batidas = FetchMRPRecords(watchComm, AppConfig.NSR);
+            //var batidas = FetchMRPRecords(watchComm, AppConfig.NSR);
+            var batidas = new List<Marcacao>()
+            {
+                new Marcacao() {
+                    Cpf = "02312579022",
+                    DateTimeMarkingPoint = DateTime.Now,
+                    NSR = "1"
+                },
+                new Marcacao() {
+                    Cpf = "88430510087",
+                    DateTimeMarkingPoint = DateTime.Now.AddDays(1),
+                    NSR = "2"
+                },
+                new Marcacao() {
+                    Cpf = "02938870043",
+                    DateTimeMarkingPoint = DateTime.Now.AddDays(2),
+                    NSR = "3"
+                }
+            };
 
-            watchComm.CloseConnection();
+            //watchComm.CloseConnection();
 
-            var Cpfs = GetPis(batidas);
-
-            Afd(batidas, Cpfs);
-            //GenerateAfdFile(batidas);
+            EnviaMarcacoes(batidas);
         }
         catch (Exception ex)
         {
@@ -147,91 +167,89 @@ internal class Program
             Logs.LogError("Erro ao atualizar NSR no arquivo de configuração: " + ex.Message);
         }
     }
-    public static List<Fp_ColetaMarcacoes> TransformarBatidas(List<Marcacao> records)
+
+    public static void EnviaMarcacoes(List<Marcacao> batidas)
     {
-        List<Fp_ColetaMarcacoes> marcacoes = new List<Fp_ColetaMarcacoes>();
-        foreach (var record in records)
+
+        string connectionString = AppConfig.ConnectionString;
+        string fp28 = "";
+
+        using (OdbcConnection connection = new OdbcConnection(connectionString))
         {
-            var marcacao = new Fp_ColetaMarcacoes
+            // Abra a conexão
+            connection.Open();
+            Logs.LogAction(AppConfig.LogIdentifier, "Conexão com banco de dados estabelecida com sucesso.");
+
+            // Primeiro, execute o SELECT para obter o nome da tabela
+            string selectQuery = "SELECT UPPER(table_name) AS tablename FROM SYS.SYSTABLE WHERE TABLE_NAME LIKE 'FP28%' ORDER BY table_id DESC";
+            string tableName = null;
+
+            using (OdbcCommand selectCommand = new OdbcCommand(selectQuery, connection))
             {
-                Id = 0, // Id vai vazio
-                ColetorMaquinaId = AppConfig.IdMaquina,
-                Pis = "", // Pis vai vazio
-                Data = record.DateTimeMarkingPoint,
-                Hora = record.DateTimeMarkingPoint.TimeOfDay,
-                Nsr = int.Parse(record.NSR),
-                TipoRegistro = 3, // Tipo de registro sempre 3
-                RegistroCru = "", // Registro Cru vai vazio
-                Cpf = record.Cpf
-            };
-            marcacoes.Add(marcacao);
-        }
-        return marcacoes;
-    }
-
-    public static Dictionary<string, string> GetPis(List<Marcacao> records)
-    {
-        List<Fp_ColetaMarcacoes> marcacoes = TransformarBatidas(records);
-
-        HashSet<string> cpfsUnicos = new HashSet<string>();
-        foreach (var batida in marcacoes)
-        {
-            cpfsUnicos.Add(batida.Cpf);
-        }
-
-        var listaCpf = cpfsUnicos.ToList();
-
-        var jsonPayload = JsonConvert.SerializeObject(new { listaCpf });
-
-        if (records.Count > 0)
-        {
-            var request = (HttpWebRequest)WebRequest.Create($"{AppConfig.GespamUrl}/Fp_ColetaMarcacoes/BuscaPisporCpf");
-            request.Method = "POST";
-            request.ContentType = "application/json";
-            byte[] byteArray = Encoding.UTF8.GetBytes(jsonPayload);
-            request.ContentLength = byteArray.Length;
-
-            using (var dataStream = request.GetRequestStream())
-            {
-                dataStream.Write(byteArray, 0, byteArray.Length);
-            }
-
-            try
-            {
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (OdbcDataReader reader = selectCommand.ExecuteReader())
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    if (reader.Read())
                     {
-                        using (var reader = new StreamReader(response.GetResponseStream()))
-                        {
-                            string responseString = reader.ReadToEnd();
-                            var lista = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);
-                            // Faça algo com a lista de CPFs e PIS recebidos
-                            return lista;
-                        }
+                        tableName = reader.GetString(0);
+                        fp28 = tableName;
+                        Logs.LogAction(AppConfig.LogIdentifier, "Tabela de contratos obtida: " + fp28);
                     }
                     else
                     {
-                        throw new Exception("Erro ao enviar CPFs únicos");
+                        Logs.LogError("Nenhuma tabela encontrada com o padrão 'FP28%'");
+                        return;
                     }
                 }
             }
-            catch (WebException ex)
+            
+            foreach (var marcacao in batidas)
             {
-                using (var response = ex.Response)
+                var pisFuncionario = "";
+                string selectFuncionario = $"select nomefuncionario, pispasep, numerocpf from {fp28} where numerocpf = {decimal.Parse(marcacao.Cpf)}";
+
+                using (OdbcCommand selectCommand = new OdbcCommand(selectFuncionario, connection))
                 {
-                    if (response != null)
+                    using (OdbcDataReader reader = selectCommand.ExecuteReader())
                     {
-                        using (var reader = new StreamReader(response.GetResponseStream()))
+                        if (reader.Read())
                         {
-                            string errorText = reader.ReadToEnd();
-                            Console.WriteLine($"Erro na requisição: {errorText}");
+                            pisFuncionario = reader[1].ToString();
+                            Logs.LogAction(AppConfig.LogIdentifier, "Pis obtido do funcionario: " + reader[0]);
+                        }
+                        else
+                        {
+                            Logs.LogError("Funcionário não encontrado. Cpf: " + marcacao.Cpf);
+                            return;
                         }
                     }
                 }
+                try 
+                {
+                    string insertQuery = "insert into fp_coletamarcacoes (fcl_id, fcl_pis, fcl_data, fcl_hora, fcl_nsr, fcm_tiporegistro, fcm_registrocru )" +
+                        "values (?, ?, ?, ?, ?, ?, ?)";
+                    string registroCru = marcacao.NSR.PadLeft(9, '0') + "3" + marcacao.DateTimeMarkingPoint.ToString("ddMMyyyyhhmm") + pisFuncionario.PadLeft(12, '0');
+                    
+                    using (OdbcCommand command = new OdbcCommand(insertQuery, connection))
+                    {
+                        command.Parameters.AddWithValue("@fcl_id", AppConfig.IdMaquina);
+                        command.Parameters.AddWithValue("@fcl_pis", pisFuncionario);
+                        command.Parameters.AddWithValue("@fcl_data", marcacao.DateTimeMarkingPoint);
+                        command.Parameters.AddWithValue("@fcl_hora", marcacao.DateTimeMarkingPoint.ToString("HH:mm:ss"));
+                        command.Parameters.AddWithValue("@fcl_nsr", Int32.Parse(marcacao.NSR));
+                        command.Parameters.AddWithValue("@fcm_tiporegistro", 3);
+                        command.Parameters.AddWithValue("@fcm_registrocru", registroCru);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        Logs.LogAction(AppConfig.LogIdentifier, "Marcação inserida na tabela: " + marcacao);
+                    }
+                }
+                catch(Exception error)
+                {
+                    Logs.LogError("Erro ao Inserir dados na tabela Fp_ColetaMarcacoes: " + error.Message);
+                }
+
             }
         }
-        return null;
     }
 
     public static void Afd(List<Marcacao> batidas, Dictionary<string, string> Cpfs)
@@ -269,7 +287,7 @@ internal class Program
                 {
                     writer.WriteLine(afdCabecalho);
                 }
-                else
+                else if (lines[i] != "")
                 {
                     writer.WriteLine(lines[i]);
                 }

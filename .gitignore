@@ -63,4 +63,5 @@ mono_crash.*
 *.nupkg
 *.snupkg
 
+
 # Arquivos temporários de
