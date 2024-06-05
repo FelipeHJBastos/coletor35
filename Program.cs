@@ -31,12 +31,17 @@ internal class Program
             //SendEmployees.GetEmployees();
 
             //instancia watchcomm para conexão com relogio.
-            //var watchComm = InstanciaWatchComm();
-            //watchComm.OpenConnection();
+            var watchComm = InstanciaWatchComm();
+            watchComm.OpenConnection();
 
-            //var batidas = FetchMRPRecords(watchComm, AppConfig.NSR);
-            var batidas = new List<Marcacao>()
+           var batidas = FetchMRPRecords(watchComm, AppConfig.NSR);
+            /*var batidas = new List<Marcacao>()
             {
+                new Marcacao() {
+                    Cpf = "02938870043",
+                    DateTimeMarkingPoint = DateTime.Now.AddDays(2),
+                    NSR = "3"
+                },
                 new Marcacao() {
                     Cpf = "02312579022",
                     DateTimeMarkingPoint = DateTime.Now,
@@ -47,16 +52,14 @@ internal class Program
                     DateTimeMarkingPoint = DateTime.Now.AddDays(1),
                     NSR = "2"
                 },
-                new Marcacao() {
-                    Cpf = "02938870043",
-                    DateTimeMarkingPoint = DateTime.Now.AddDays(2),
-                    NSR = "3"
-                }
             };
-
-            //watchComm.CloseConnection();
-
+            */
+            watchComm.CloseConnection();
+            Logs.LogAction(AppConfig.LogIdentifier, "Enviando marcações.");
             EnviaMarcacoes(batidas);
+            UpdateConfigNsr();
+            AtualizaStatusMaquina();
+            
         }
         catch (Exception ex)
         {
@@ -98,11 +101,9 @@ internal class Program
     {
         List<Marcacao> batidas = new List<Marcacao>();
         var lastNsr = 0;
-        var dataPrimeiroRegistro = new DateTime();
-        var dataUltimoRegistro = new DateTime();
         try
         {
-            watchComm.RepositioningMRPRecordsPointer(nsr);//Reposiciona nsr para pegar batidas a partir do numero reposicionamento.
+            watchComm.RepositioningMRPRecordsPointer(int.Parse(nsr + 1).ToString());//Reposiciona nsr para pegar batidas a partir do numero reposicionamento.
             var records = watchComm.InquiryMRPRecords(false, false, true /* retorna marcação de ponto */, false, false);
             var recordIndex = 0;
 
@@ -123,20 +124,13 @@ internal class Program
                                 NSR = recordDeserialized["NSR"]
                             });
 
-                            if (recordIndex == 0)
-                            {
-                                dataPrimeiroRegistro = DateTime.Parse(recordDeserialized["DateTimeMarkingPoint"]);
-                            }
-                            dataUltimoRegistro = DateTime.Parse(recordDeserialized["DateTimeMarkingPoint"]);
-                            lastNsr = Int32.Parse(record.NSR);
+                            AppConfig.NSR = record.NSR;
                         }
                     }
                     recordIndex++;
                 }
                 records = watchComm.ConfirmationReceiptMRPRecords();
             }
-            UpdateConfigNsr(lastNsr.ToString());
-            AppConfig.AtualizaDataRegistros(dataPrimeiroRegistro, dataUltimoRegistro);
             Logs.LogAction(AppConfig.LogIdentifier, $@"Buscou batidas do relógio a partir do nsr {nsr}");
         }
         catch (Exception ex)
@@ -146,21 +140,22 @@ internal class Program
         return batidas;
     }
 
-    private static void UpdateConfigNsr(string newNsr)
+    private static void UpdateConfigNsr()
     {
-        string configPath = "config.json"; // Define o caminho do arquivo de configuração
+        string exePath = AppDomain.CurrentDomain.BaseDirectory;
+        string configFilePath = Path.Combine(exePath, "config.json");
         try
         {
-            var json = File.ReadAllText(configPath);
+            var json = File.ReadAllText(configFilePath);
             var config = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
 
-            config["nsr"] = newNsr; // Atualiza o NSR com o novo valor
+            config["nsr"] = AppConfig.NSR; // Atualiza o NSR com o novo valor
 
             string updatedJson = JsonConvert.SerializeObject(config, Formatting.Indented);
 
-            File.WriteAllText(configPath, updatedJson); // Salva as alterações no arquivo de configuração
+            File.WriteAllText(configFilePath, updatedJson); // Salva as alterações no arquivo de configuração
 
-            Logs.LogAction(AppConfig.LogIdentifier, $"NSR atualizado para {newNsr} no arquivo de configuração.");
+            Logs.LogAction(AppConfig.LogIdentifier, $"NSR atualizado para {AppConfig.NSR} no arquivo de configuração.");
         }
         catch (Exception ex)
         {
@@ -174,10 +169,15 @@ internal class Program
         string connectionString = AppConfig.ConnectionString;
         string fp28 = "";
 
+        Logs.LogAction(AppConfig.LogIdentifier, "CONNSTRING:" +  connectionString);
+
         using (OdbcConnection connection = new OdbcConnection(connectionString))
         {
+            Logs.LogAction(AppConfig.LogIdentifier, "Conectando com banco de dados");
+
             // Abra a conexão
             connection.Open();
+
             Logs.LogAction(AppConfig.LogIdentifier, "Conexão com banco de dados estabelecida com sucesso.");
 
             // Primeiro, execute o SELECT para obter o nome da tabela
@@ -219,7 +219,7 @@ internal class Program
                         else
                         {
                             Logs.LogError("Funcionário não encontrado. Cpf: " + marcacao.Cpf);
-                            return;
+                            continue;
                         }
                     }
                 }
@@ -227,12 +227,12 @@ internal class Program
                 {
                     string insertQuery = "insert into fp_coletamarcacoes (fcl_id, fcl_pis, fcl_data, fcl_hora, fcl_nsr, fcm_tiporegistro, fcm_registrocru )" +
                         "values (?, ?, ?, ?, ?, ?, ?)";
-                    string registroCru = marcacao.NSR.PadLeft(9, '0') + "3" + marcacao.DateTimeMarkingPoint.ToString("ddMMyyyyhhmm") + pisFuncionario.PadLeft(12, '0');
+                    string registroCru = marcacao.NSR.Trim('0').PadLeft(9, '0') + "3" + marcacao.DateTimeMarkingPoint.ToString("ddMMyyyyhhmm") + pisFuncionario.PadLeft(12, '0');
                     
                     using (OdbcCommand command = new OdbcCommand(insertQuery, connection))
                     {
                         command.Parameters.AddWithValue("@fcl_id", AppConfig.IdMaquina);
-                        command.Parameters.AddWithValue("@fcl_pis", pisFuncionario);
+                        command.Parameters.AddWithValue("@fcl_pis", pisFuncionario.PadLeft(12, '0'));
                         command.Parameters.AddWithValue("@fcl_data", marcacao.DateTimeMarkingPoint);
                         command.Parameters.AddWithValue("@fcl_hora", marcacao.DateTimeMarkingPoint.ToString("HH:mm:ss"));
                         command.Parameters.AddWithValue("@fcl_nsr", Int32.Parse(marcacao.NSR));
@@ -252,6 +252,33 @@ internal class Program
         }
     }
 
+    public static void AtualizaStatusMaquina()
+    {
+        string connectionString = AppConfig.ConnectionString;
+        Logs.LogAction(AppConfig.LogIdentifier, "CONNSTRING Atualiza status maquina:" + connectionString);
+
+        using (OdbcConnection connection = new OdbcConnection(connectionString))
+        {
+            connection.Open();
+
+            Logs.LogAction(AppConfig.LogIdentifier, "Conexão com banco de dados estabelecida com sucesso.");
+
+            try
+            {
+                string insertQuery = $"update FP_COLETORMAQUINA set fcl_ultimonsr = {AppConfig.NSR}, FCL_ULTIMAATUALIZACAO = '{DateTime.Now.ToString("yyyy-MM-dd")}'  where fcl_id = {AppConfig.IdMaquina}";
+                using (OdbcCommand command = new OdbcCommand(insertQuery, connection))
+                {
+                    int rowsAffected = command.ExecuteNonQuery();
+                    Logs.LogAction(AppConfig.LogIdentifier, "Status Maquina Coletora alterada");
+                }
+            }
+            catch (Exception error)
+            {
+                Logs.LogError("Erro alterar status do relogio ponto" + error.Message);
+            }
+        }
+    }
+    /*
     public static void Afd(List<Marcacao> batidas, Dictionary<string, string> Cpfs)
     {
         string[] lines = File.ReadAllLines(AppConfig.FilePath);
@@ -316,6 +343,6 @@ internal class Program
             writer.WriteLine(afd.ToString());
         }
     }
-
+    */
 }
 

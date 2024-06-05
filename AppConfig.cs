@@ -6,6 +6,8 @@ using System.Text;
 using coletor35;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Net.NetworkInformation;
+
 
 namespace coletor35
 {
@@ -22,16 +24,9 @@ namespace coletor35
         public static string ExpoenteRSA { get; private set; }
         public static string User { get; private set; }// padrao = "login"
         public static string Password { get; private set; } // padrão = "senha"
-        public static string NSR { get; private set; } // Identificador do numero da batida que está sendo coletada.
-        public static string FilePath { get; private set; } // caminho em que o arquivo será gerado
+        public static string NSR { get; set; } // Identificador do numero da batida que está sendo coletada.
         public static int LogIdentifier { get; private set; } //Identificador se log está ativo. 1 = sim, 2 = não
         public static int IdMaquina { get; private set; } //Identificador da maquina em que as batidas serão adicionadas no gespam
-        public static string GespamUrl { get; private set; } //URL do gespam da prefeitura
-        public static string Cnpj { get; private set; } //URL do gespam da prefeitura
-        public static string RazaoSocial { get; private set; } //URL do gespam da prefeitura
-        public static string SerialNumber { get; private set; } //URL do gespam da prefeitura
-        public static string DataPrimeiroRegistro { get; private set; } //URL do gespam da prefeitura
-        public static string DataUltimoRegistro { get; private set; } //URL do gespam da prefeitura
         public static string ConnectionString { get; private set; } //URL do gespam da prefeitura
 
         public AppConfig()
@@ -43,13 +38,16 @@ namespace coletor35
         {
             try
             {
+                string exePath = AppDomain.CurrentDomain.BaseDirectory;
+                string configFilePath = Path.Combine(exePath, "config.json");
+
                 //Verifica se projeto contém configuração.
-                if (!File.Exists("config.json"))
+                if (!File.Exists(configFilePath))
                 {
                     CreateConfigFile();
                 }
 
-                string jsonConfig = File.ReadAllText("config.json");
+                string jsonConfig = File.ReadAllText(configFilePath);
                 var config = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonConfig);
 
                 IP = config["ip"];
@@ -58,62 +56,16 @@ namespace coletor35
                 User = config["user"];
                 Password = config["password"];
                 NSR = config["nsr"];
-                FilePath = config["filePath"];
                 LogIdentifier = Int32.Parse(config["logIdentifier"]);
                 ConnectionString = config["connectionString"];
                 IdMaquina = Int32.Parse(config["idMaquina"]);
-                GespamUrl = config["gespamUrl"];
-                Cnpj = config["cnpj"];
-                RazaoSocial = config["razaoSocial"];
-                SerialNumber = config["serialNumber"];
-                DataPrimeiroRegistro = config["dataPrimeiroRegistro"];
-                DataUltimoRegistro = config["dataUltimoRegistro"];
+
+                Logs.LogAction(LogIdentifier, "Dados de Configuração obtida!");
 
             }
             catch (Exception ex)
             {
                 Logs.LogError("Erro ao buscar parâmetros de configurações: " + ex.Message);
-            }
-        }
-
-        public static void AtualizaDataRegistros(DateTime dataPrimeiroRegisto, DateTime dataUltimoRegistro)
-        {
-            try
-            {
-                var primeiraData = dataPrimeiroRegisto.ToString("ddMMyyyy");
-                var ultimaData = dataUltimoRegistro.ToString("ddMMyyyy");
-
-                string jsonConfig = File.ReadAllText("config.json");
-                var config = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonConfig);
-                if (config["dataPrimeiroRegistro"] is null)
-                {
-                    config["dataPrimeiroRegistro"] = primeiraData;
-                }
-                else if (!File.Exists(FilePath))//se não existe arquivo de batidas.
-                {
-                    config["dataPrimeiroRegistro"] = primeiraData;
-                }
-
-                config["dataUltimoRegistro"] = ultimaData;
-
-                if(config["dataPrimeiroRegistro"] != primeiraData || config["dataUltimoRegistro"] != ultimaData)
-                {
-                    File.WriteAllText("config.json", JsonConvert.SerializeObject(config, Formatting.Indented));
-                    Logs.LogAction(LogIdentifier, "Data do primeiro registro atualizada para data.");
-                }
-
-                if(config["dataPrimeiroRegistro"] == primeiraData)
-                {
-                    Logs.LogAction(LogIdentifier, "Data do primeiro registro mantida.");
-                }
-                if (config["dataPrimeiroRegistro"] == primeiraData)
-                {
-                    Logs.LogAction(LogIdentifier, "Data do primeiro registro mantida.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logs.LogError($"Erro ao atualizar data do primeiro registro: {ex}");
             }
         }
 
@@ -153,31 +105,14 @@ namespace coletor35
             Console.Write("Id do relógio dentro do sistema: ");
             config["idMaquina"] = Console.ReadLine();
 
-            Console.Write("Endereço do Gespam da Prefeitura: ");
-            config["gespamUrl"] = Console.ReadLine();
-
-            Console.Write("Informe o Cnpj da prefeeitura: ");
-            config["cnpj"] = Console.ReadLine();
-
-            Console.Write("Informe a razão social da prefeeitura: ");
-            config["razaoSocial"] = Console.ReadLine();
-
-            Console.Write("Informe o número de série do relogio ponto: ");
-            var serialNumber = Console.ReadLine();
-            if (serialNumber is null)
-            {
-                config["serialNumber"] = serialNumber;
-            }
-            else
-            {
-                config["serialNumber"] = "99999999999999999";
-            }
-            config["dataPrimeiroRegistro"] = null;
-            config["dataUltimoRegistro"] = null;
             config["connectionString"] = "DSN=ODBCDATABASE;Uid=USER;Pwd=PASSWORD;";
 
             string jsonConfig = JsonConvert.SerializeObject(config, Formatting.Indented);
-            File.WriteAllText("config.json", jsonConfig);
+
+            string exePath = AppDomain.CurrentDomain.BaseDirectory;
+            string configFilePath = Path.Combine(exePath, "config.json");
+
+            File.WriteAllText(configFilePath, jsonConfig);
 
             Logs.LogAction(LogIdentifier, "Arquivo 'config.json' criado com sucesso.");
             HideConsole();

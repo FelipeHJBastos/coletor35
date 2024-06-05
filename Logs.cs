@@ -13,7 +13,9 @@ namespace coletor35
         {
             if (logIdentifier == 1)
             {
-                string logFileName = "log.txt"; // Nome do arquivo de log
+                string exePath = AppDomain.CurrentDomain.BaseDirectory;
+                string configFilePath = Path.Combine(exePath, "log.txt");
+
                 string json = jsonData != null ? JsonConvert.SerializeObject(jsonData) : ""; //Se recebe objeto json imprime. Se não, permanece nulo
 
                 string logMessage = $"{DateTime.Now}: {actionDescription}\n";
@@ -22,14 +24,16 @@ namespace coletor35
                     logMessage += $"Dados: {json}\n";
                 }
                 // Escrevendo no arquivo de log
-                File.AppendAllText(logFileName, logMessage);
+                File.AppendAllText(configFilePath, logMessage);
             }
         }
         public static void LogError(string message)
         {
-            string logFilePath = "errorLog.txt";
+            string exePath = AppDomain.CurrentDomain.BaseDirectory;
+            string configFilePath = Path.Combine(exePath, "errorLog.txt");
+
             string errorMessage = $"{DateTime.Now}: {message}\n";
-            File.AppendAllText(logFilePath, errorMessage);
+            File.AppendAllText(configFilePath, errorMessage);
         }
     }
 }
