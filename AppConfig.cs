@@ -11,6 +11,24 @@ using System.Net.NetworkInformation;
 
 namespace coletor35
 {
+    public class Relogio
+    {
+        public static string IP { get; private set; }// ip que o relogio está cadastrado.
+        public static string ChaveRSA { get; private set; } //chave de segurança do relogio.
+        public static string ExpoenteRSA { get; private set; }
+        public static string NSR { get; set; } // Identificador do numero da batida que está sendo coletada.
+        public static int IdMaquina { get; private set; } //Identificador da maquina em que as batidas serão adicionadas no gespam
+    }
+
+    public class Dados
+    {
+        public static List<Relogio> Maquinas { get; private set; }
+        public static string User { get; private set; }// padrao = "login"
+        public static string Password { get; private set; } // padrão = "senha"
+        public static int LogIdentifier { get; private set; } //Identificador se log está ativo. 1 = sim, 2 = não
+        public static string ConnectionString { get; private set; } //URL do gespam da prefeitura
+    }
+
     internal class AppConfig
     {
         [DllImport("kernel32.dll")]
@@ -18,16 +36,6 @@ namespace coletor35
 
         [DllImport("kernel32.dll")]
         private static extern bool HideConsole();
-
-        public static string IP { get; private set; }// ip que o relogio está cadastrado.
-        public static string ChaveRSA { get; private set; } //chave de segurança do relogio.
-        public static string ExpoenteRSA { get; private set; }
-        public static string User { get; private set; }// padrao = "login"
-        public static string Password { get; private set; } // padrão = "senha"
-        public static string NSR { get; set; } // Identificador do numero da batida que está sendo coletada.
-        public static int LogIdentifier { get; private set; } //Identificador se log está ativo. 1 = sim, 2 = não
-        public static int IdMaquina { get; private set; } //Identificador da maquina em que as batidas serão adicionadas no gespam
-        public static string ConnectionString { get; private set; } //URL do gespam da prefeitura
 
         public AppConfig()
         {
@@ -50,15 +58,20 @@ namespace coletor35
                 string jsonConfig = File.ReadAllText(configFilePath);
                 var config = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonConfig);
 
-                IP = config["ip"];
-                ChaveRSA = config["chaveRSA"];
-                ExpoenteRSA = config["expoenteRSA"];
-                User = config["user"];
-                Password = config["password"];
-                NSR = config["nsr"];
-                LogIdentifier = Int32.Parse(config["logIdentifier"]);
-                ConnectionString = config["connectionString"];
-                IdMaquina = Int32.Parse(config["idMaquina"]);
+                //Dados.Maquina.IP = config["ip"];
+                //Dados.RelogioChaveRSA = config["chaveRSA"];
+                //Dados.Maquina.ExpoenteRSA = config["expoenteRSA"];
+                //User = config["user"];
+                //Password = config["password"];
+                //Dados.RelogioNSR = config["nsr"];
+                //LogIdentifier = Int32.Parse(config["logIdentifier"]);
+                //ConnectionString = config["connectionString"];
+                //Dados.Maquina.IdMaquina = Int32.Parse(config["idMaquina"]);
+
+                if (config["maquinas"].count() > 0)
+                {
+                    Logs.LogAction(LogIdentifier, "Mais de 1 relogio. ");
+                }
 
                 Logs.LogAction(LogIdentifier, "Dados de Configuração obtida!");
 
