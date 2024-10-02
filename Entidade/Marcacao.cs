@@ -1,4 +1,5 @@
-﻿using System;
+﻿using org.cesar.dmplight.watchComm.impl;
+using System;
 
 public class Marcacao
 {
@@ -7,4 +8,5 @@ public class Marcacao
     public bool IsValid { get; set; }             // Boolean
     public string NSR { get; set; }               // String
     public string TimeZoneGmt { get; set; }          // String
+    public int IdMaquina {  get; set; } 
 }

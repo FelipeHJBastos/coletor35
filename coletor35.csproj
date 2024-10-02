@@ -108,6 +108,8 @@
     <Compile Include="AppConfig.cs" />
     <Compile Include="Entidade\Fp_ColetaMarcacoes.cs" />
     <Compile Include="Entidade\Marcacao.cs" />
+    <Compile Include="Entidade\Parametros.cs" />
+    <Compile Include="Entidade\RelogioPonto.cs" />
     <Compile Include="Entidade\SendEmployees.cs" />
     <Compile Include="Logs.cs" />
     <Compile Include="Program.cs" />
